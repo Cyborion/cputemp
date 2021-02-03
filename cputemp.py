@@ -66,7 +66,7 @@ class ThermometerService(Service):
 
         Service.__init__(self, index, self.THERMOMETER_SVC_UUID, True)
         self.add_characteristic(TempCharacteristic(self))
-        self.add_characteristic(UnitCharacteristic(self, self.bus, 1))
+        self.add_characteristic(UnitCharacteristic(self))
 
     def is_farenheit(self):
         return self.farenheit
@@ -182,13 +182,11 @@ class AuthenticationDescriptor(Descriptor):
 class UnitCharacteristic(Characteristic):
     UNIT_CHARACTERISTIC_UUID = "00000003-710e-4a5b-8d75-3e5b444bc3cf"
 
-    def __init__(self, bus, index, service):
+    def __init__(self, service):
         Characteristic.__init__(
-            self, bus, index,
-            self.UNIT_CHARACTERISTIC_UUID,
-            ["read", "write"],
-            service)
-        self.add_descriptor(UnitDescriptor(self, bus, 1))
+            self, self.UNIT_CHARACTERISTIC_UUID,
+            ["read", "write"], service)
+        self.add_descriptor(UnitDescriptor(self))
 
     def WriteValue(self, value, options):
         val = str(value[0]).upper()
@@ -213,9 +211,9 @@ class UnitDescriptor(Descriptor):
     UNIT_DESCRIPTOR_UUID = "2901"
     UNIT_DESCRIPTOR_VALUE = "Temperature Units (F or C)"
 
-    def __init__(self, bus, index, characteristic):
+    def __init__(self, characteristic):
         Descriptor.__init__(
-            self, bus, index, self.UNIT_DESCRIPTOR_UUID,
+            self, self.UNIT_DESCRIPTOR_UUID,
             ["read"],
             characteristic)
 
