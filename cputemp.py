@@ -161,9 +161,11 @@ class AuthenticationCharacteristic(Characteristic):
         self.add_descriptor(AuthenticationDescriptor(self))
 
     def WriteValue(self, value, options):
-        print("Just value")
-        print(value)
-        self.service.passkey_match(value)
+        val = ""
+        print("Converted")
+        val.join([str(v) for v in value])
+        print(val)
+        self.service.passkey_match(val)
 
 
 class AuthenticationDescriptor(Descriptor):
