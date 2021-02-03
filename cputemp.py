@@ -38,7 +38,7 @@ class SMOKAdvertisement(Advertisement):
         self.include_tx_power = True
 
 
-class AuthenticationService(Service):
+class SMOKService(Service):
     AUTHENTICATION_SVC_UUID = "00f25ec8-fd45-4828-a929-d658c9a86341"
     # TODO change this to ENV written while programming new RAPID module
     PASSKEY = "1234"
@@ -55,7 +55,9 @@ class AuthenticationService(Service):
         self.add_characteristic(AuthenticationCharacteristic(self))
 
     def passkey_match(self, passkey):
-        return passkey == self.PASSKEY
+        if passkey == self.PASSKEY:
+            self.add_characteristic(TempCharacteristic(self))
+            self.add_characteristic(UnitCharacteristic(self))
 
 
 class ThermometerService(Service):
@@ -228,7 +230,7 @@ class UnitDescriptor(Descriptor):
 
 
 app = Application()
-app.add_service(ThermometerService(0))
+app.add_service(SMOKService(0))
 app.register()
 
 adv = SMOKAdvertisement(0)
