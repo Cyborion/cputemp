@@ -161,7 +161,7 @@ class AuthenticationCharacteristic(Characteristic):
         self.add_descriptor(AuthenticationDescriptor(self))
 
     def WriteValue(self, value, options):
-        val = str(value[0]).upper()
+        val = str(value)
         self.service.passkey_match(val)
 
 
