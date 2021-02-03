@@ -161,7 +161,9 @@ class AuthenticationCharacteristic(Characteristic):
         self.add_descriptor(AuthenticationDescriptor(self))
 
     def WriteValue(self, value, options):
-        val = str(value)
+        val = ""
+        for c in desc:
+            val.append(dbus.Byte(c.encode()))
         self.service.passkey_match(val)
 
 
