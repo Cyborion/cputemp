@@ -55,6 +55,7 @@ class SMOKService(Service):
         self.add_characteristic(AuthenticationCharacteristic(self))
 
     def passkey_match(self, passkey):
+        print(passkey)
         if passkey == self.PASSKEY:
             self.add_characteristic(TempCharacteristic(self))
             self.add_characteristic(UnitCharacteristic(self))
