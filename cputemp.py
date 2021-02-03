@@ -22,7 +22,6 @@ SOFTWARE.
 """
 
 import dbus
-
 from advertisement import Advertisement
 from service import Application, Service, Characteristic, Descriptor
 from gpiozero import CPUTemperature
@@ -30,11 +29,34 @@ from gpiozero import CPUTemperature
 GATT_CHRC_IFACE = "org.bluez.GattCharacteristic1"
 NOTIFY_TIMEOUT = 5000
 
-class ThermometerAdvertisement(Advertisement):
+
+class SMOKAdvertisement(Advertisement):
     def __init__(self, index):
         Advertisement.__init__(self, index, "peripheral")
-        self.add_local_name("Thermometer")
+        self.add_local_name("SMOK")
+        # transmit power
         self.include_tx_power = True
+
+
+class AuthenticationService(Service):
+    AUTHENTICATION_SVC_UUID = "00f25ec8-fd45-4828-a929-d658c9a86341"
+    # TODO change this to ENV written while programming new RAPID module
+    PASSKEY = "1234"
+
+    def __init__(self, index):
+        # Service.__init__(self, index, uuid, primary)
+        # The difference between primary and secondary services is important to note.
+        # A primary service is the standard type of GATT service that includes relevant,
+        # standard functionality exposed by the GATT server. A secondary service, on the other hand,
+        # is intended to be included only in other primary services and makes sense only as its modifier,
+        # having no real meaning on its own. In practice, secondary services are rarely used.
+        # oreilly.com
+        Service.__init__(self, index, self.AUTHENTICATION_SVC_UUID, True)
+        self.add_characteristic(AuthenticationCharacteristic(self))
+
+    def passkey_match(self, passkey):
+        return passkey == self.PASSKEY
+
 
 class ThermometerService(Service):
     THERMOMETER_SVC_UUID = "00000001-710e-4a5b-8d75-3e5b444bc3cf"
@@ -52,6 +74,7 @@ class ThermometerService(Service):
     def set_farenheit(self, farenheit):
         self.farenheit = farenheit
 
+
 class TempCharacteristic(Characteristic):
     TEMP_CHARACTERISTIC_UUID = "00000002-710e-4a5b-8d75-3e5b444bc3cf"
 
@@ -59,8 +82,8 @@ class TempCharacteristic(Characteristic):
         self.notifying = False
 
         Characteristic.__init__(
-                self, self.TEMP_CHARACTERISTIC_UUID,
-                ["notify", "read"], service)
+            self, self.TEMP_CHARACTERISTIC_UUID,
+            ["notify", "read"], service)
         self.add_descriptor(TempDescriptor(self))
 
     def get_temperature(self):
@@ -104,15 +127,16 @@ class TempCharacteristic(Characteristic):
 
         return value
 
+
 class TempDescriptor(Descriptor):
     TEMP_DESCRIPTOR_UUID = "2901"
     TEMP_DESCRIPTOR_VALUE = "CPU Temperature"
 
     def __init__(self, characteristic):
         Descriptor.__init__(
-                self, self.TEMP_DESCRIPTOR_UUID,
-                ["read"],
-                characteristic)
+            self, self.TEMP_DESCRIPTOR_UUID,
+            ["read"],
+            characteristic)
 
     def ReadValue(self, options):
         value = []
@@ -123,13 +147,45 @@ class TempDescriptor(Descriptor):
 
         return value
 
+
+class AuthenticationCharacteristic(Characteristic):
+    AUTH_CHARACTERISTIC_UUID = "6a3139ba-da5e-433f-afb0-635b9d320f8f"
+
+    def __init__(self, service):
+        Characteristic.__init__(
+            self, self.AUTH_CHARACTERISTIC_UUID,
+            ["write"], service)
+        self.add_descriptor(AuthenticationDescriptor(self))
+
+    def WriteValue(self, value, options):
+        val = str(value[0]).upper()
+        self.service.passkey_match(val)
+
+
+class AuthenticationDescriptor(Descriptor):
+    AUTH_DESCRIPTOR_UUID = "2137"
+    AUTH_DESCRIPTOR_VALUE = "Authentication passkey"
+
+    def __init__(self, characteristic):
+        Descriptor.__init__(self, self.AUTH_DESCRIPTOR_UUID, ["read"], characteristic)
+
+    def ReadValue(self, options):
+        value = []
+        desc = self.AUTH_DESCRIPTOR_VALUE
+
+        for c in desc:
+            value.append(dbus.Byte(c.encode()))
+
+        return value
+
+
 class UnitCharacteristic(Characteristic):
     UNIT_CHARACTERISTIC_UUID = "00000003-710e-4a5b-8d75-3e5b444bc3cf"
 
     def __init__(self, service):
         Characteristic.__init__(
-                self, self.UNIT_CHARACTERISTIC_UUID,
-                ["read", "write"], service)
+            self, self.UNIT_CHARACTERISTIC_UUID,
+            ["read", "write"], service)
         self.add_descriptor(UnitDescriptor(self))
 
     def WriteValue(self, value, options):
@@ -142,11 +198,14 @@ class UnitCharacteristic(Characteristic):
     def ReadValue(self, options):
         value = []
 
-        if self.service.is_farenheit(): val = "F"
-        else: val = "C"
+        if self.service.is_farenheit():
+            val = "F"
+        else:
+            val = "C"
         value.append(dbus.Byte(val.encode()))
 
         return value
+
 
 class UnitDescriptor(Descriptor):
     UNIT_DESCRIPTOR_UUID = "2901"
@@ -154,9 +213,9 @@ class UnitDescriptor(Descriptor):
 
     def __init__(self, characteristic):
         Descriptor.__init__(
-                self, self.UNIT_DESCRIPTOR_UUID,
-                ["read"],
-                characteristic)
+            self, self.UNIT_DESCRIPTOR_UUID,
+            ["read"],
+            characteristic)
 
     def ReadValue(self, options):
         value = []
@@ -167,11 +226,12 @@ class UnitDescriptor(Descriptor):
 
         return value
 
+
 app = Application()
 app.add_service(ThermometerService(0))
 app.register()
 
-adv = ThermometerAdvertisement(0)
+adv = SMOKAdvertisement(0)
 adv.register()
 
 try:
