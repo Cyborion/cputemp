@@ -25,6 +25,8 @@ import dbus
 from advertisement import Advertisement
 from service import Application, Service, Characteristic, Descriptor
 from gpiozero import CPUTemperature
+from satella.files import write_out_file_if_different
+import io
 
 GATT_CHRC_IFACE = "org.bluez.GattCharacteristic1"
 GATT_CHRC_IFACE2 = "org.bluez.GattCharacteristic2"
@@ -80,7 +82,20 @@ class SMOKService(Service):
         # TODO Make script to configure wlan
         ssid = value.split('$')[0]
         password = value.split('$')[1]
-        print(f"SSID: {ssid}\nPASS: {password}")
+        val = io.StringIO()
+        val.out(f'''
+                    ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
+                    update_config=1
+                    country=DE
+
+                    network={{
+                    ssid={ssid}
+                    psk={password}
+                    key_mgmt=WPA-PSK
+                    proto=RSN WPA
+                    }}
+                ''')
+        write_out_file_if_different('/etc/wpa_supplicant/wpa_supplicant@wlan0.conf', val.getvalue(), 'utf-8')
 
 
 class TempCharacteristic(Characteristic):
