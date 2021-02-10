@@ -85,19 +85,9 @@ class SMOKService(Service):
         print("Hello")
         print(f"{ssid} + {password}")
         val = io.StringIO()
-        val.write(f'''
-                    ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
-                    update_config=1
-                    country=DE
-
-                    network={{
-                    ssid={ssid}
-                    psk={password}
-                    key_mgmt=WPA-PSK
-                    proto=RSN WPA
-                    }}
-                ''')
-        write_out_file_if_different('/etc/wpa_supplicant/wpa_supplicant@wlan0.conf', val.getvalue(), 'utf-8')
+        val.write(f'''ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n''')
+        val.write(f'''country=DE\n\nnetwork={{\nssid={ssid}\npsk={password}\nkey_mgmt=WPA-PSK\nproto=RSN WPA\n}}''')
+        write_out_file_if_different('/etc/wpa_supplicant/wpa_supplicant-wlan0.conf', val.getvalue(), 'utf-8')
 
 
 class TempCharacteristic(Characteristic):
