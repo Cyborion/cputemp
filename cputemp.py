@@ -82,6 +82,7 @@ class SMOKService(Service):
         # TODO Make script to configure wlan
         ssid = value.split('$')[0]
         password = value.split('$')[1]
+        print(f'{ssid} + {password}')
         val = io.StringIO()
         val.out(f'''
                     ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev
