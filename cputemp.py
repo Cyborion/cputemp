@@ -79,14 +79,14 @@ class SMOKService(Service):
         return self.enable_operations
 
     def configure_wlan(self, value):
-        # TODO Make script to configure wlan
+        # TODO Change country getting Data from user
         ssid = value.split('$')[0]
         password = value.split('$')[1]
         print("Hello")
         print(f"{ssid} + {password}")
         val = io.StringIO()
         val.write(f'''ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n''')
-        val.write(f'''country=DE\n\nnetwork={{\nssid={ssid}\npsk={password}\nkey_mgmt=WPA-PSK\nproto=RSN WPA\n}}\n''')
+        val.write(f'''country=PL\n\nnetwork={{\nssid="{ssid}"\npsk="{password}"\nkey_mgmt=WPA-PSK\nproto=RSN WPA\n}}\n''')
         write_out_file_if_different('/etc/wpa_supplicant/wpa_supplicant-wlan0.conf', val.getvalue(), 'utf-8')
 
 
