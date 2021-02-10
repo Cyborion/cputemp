@@ -86,7 +86,7 @@ class SMOKService(Service):
         print(f"{ssid} + {password}")
         val = io.StringIO()
         val.write(f'''ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\n''')
-        val.write(f'''country=DE\n\nnetwork={{\nssid={ssid}\npsk={password}\nkey_mgmt=WPA-PSK\nproto=RSN WPA\n}}''')
+        val.write(f'''country=DE\n\nnetwork={{\nssid={ssid}\npsk={password}\nkey_mgmt=WPA-PSK\nproto=RSN WPA\n}}\n''')
         write_out_file_if_different('/etc/wpa_supplicant/wpa_supplicant-wlan0.conf', val.getvalue(), 'utf-8')
 
 
